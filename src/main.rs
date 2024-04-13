@@ -32,8 +32,8 @@ fn recv_new(){
             let s = s.trim_end_matches(char::from(0));
             let s = s.trim_matches(char::from(0));
             map.insert(addr.to_string(),s.to_owned());
-            println!("received {n} bytes from {addr}: {}",s);
-            print!("{:?}",map);
+            //println!("received {n} bytes from {addr}: {}",s);
+            println!("{:?}",map);
         }
         Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
             continue;
