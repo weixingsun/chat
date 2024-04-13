@@ -1,5 +1,6 @@
 use std::net::UdpSocket;
 use std::collections::HashMap;
+use std::{thread,time};
 use clap::{arg, Command};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -9,10 +10,9 @@ pub fn get_timestamp() -> i64 {
 }
 fn send_p2p(ip:&str,value:&str){
     let ip_from="0.0.0.0:1234";
-    println!("p2p");
+    //println!("p2p");
     let socket = UdpSocket::bind(ip_from).expect("could not create socket");
-    //socket.set_broadcast(true);
-    //socket.set_read_timeout(Some(Duration::new(5, 0)));
+    socket.set_read_timeout(Some(std::time::Duration::from_millis(20))).unwrap();
     socket.connect(ip).expect("could not connect to peer");
     socket.send(value.as_bytes()).unwrap();
 }
@@ -20,9 +20,9 @@ fn send_cast(value:&str){
     let ip_from="0.0.0.0:12340";
     println!("broadcast");
     let socket = UdpSocket::bind(ip_from).expect("could not create socket");
-    //socket.set_broadcast(true);
-    //socket.set_read_timeout(Some(Duration::new(5, 0)));
-    socket.connect("0.0.0.0:1234").expect("could not connect to peer");
+    socket.set_broadcast(true).expect("set_broadcast call failed");
+    socket.set_read_timeout(Some(std::time::Duration::from_millis(20))).unwrap();
+    socket.connect("255.255.255.255:1234").expect("could not connect to peer");
     socket.send(value.as_bytes()).unwrap();
 }
 fn recv_new(timeout:i64){
@@ -36,7 +36,7 @@ fn recv_new(timeout:i64){
         Ok((_n, addr)) => {
             let s = String::from_utf8_lossy(&buf).into_owned();
             let s = s.trim_end_matches(char::from(0));
-            let s = s.trim_matches(char::from(0));
+            //let s = s.trim_matches(char::from(0));
             map.insert(addr.to_string(),s.to_owned());
             //println!("received {n} bytes from {addr}: {}",s);
             println!("{:?}",map);
@@ -68,9 +68,12 @@ fn main(){
     let ip = if ip.is_none() {"".to_owned()} else {ip.unwrap().to_owned()};
     if server{
         recv_new(10000);
-    }else if ip.eq("p2p"){
-        send_p2p(&ip,"p2p");
+    }else if ip.len()>0{
+        send_p2p(&ip,"P");
     }else {
-        send_cast("cast");
+        loop{
+            send_cast("C");
+            thread::sleep(time::Duration::from_secs(5));
+        }
     }
 }
