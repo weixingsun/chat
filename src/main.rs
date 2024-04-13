@@ -58,8 +58,10 @@ fn recv_new(timeout:i64){
 fn main(){
     //send_p2p("192.168.1.2:1234","abc");
     //send_cast("def");
-    let matches = Command::new("BitSpot")                                                                         .version("v0.0.2 20240408")
-        .author("Weixing Sun <weixing.sun@gmail.com>")                                                            .about("BitSpot Robot")
+    let matches = Command::new("udpchat")
+	    .version("v0.0.1 20240408")
+        .author("Weixing Sun <weixing.sun@gmail.com>")
+		.about("Chat box")
         .arg(arg!(--server).required(false))
         .arg(arg!(--ip <VALUE>).required(false))
         .get_matches();
