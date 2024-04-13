@@ -1,5 +1,5 @@
-use std::io;
 use std::net::UdpSocket;
+use std::collections::HashMap;
 use clap::{arg, Command};
 
 fn send_p2p(ip:&str,value:&str){
@@ -24,15 +24,18 @@ fn recv_new(){
     let socket = UdpSocket::bind("0.0.0.0:1234").unwrap();
     socket.set_read_timeout(Some(std::time::Duration::from_millis(20))).unwrap();
     let mut buf = [0; 1024];
-    let mut received_count = 0;
+    let mut map:HashMap<String,String> = HashMap::new();
     loop {
         match socket.recv_from(&mut buf) {
         Ok((n, addr)) => {
-            received_count += 1;
-            let s = String::from_utf8_lossy(&buf);
+            let s = String::from_utf8_lossy(&buf).into_owned();
+            let s = s.trim_end_matches(char::from(0));
+            let s = s.trim_matches(char::from(0));
+            map.insert(addr.to_string(),s.to_owned());
             println!("received {n} bytes from {addr}: {}",s);
+            print!("{:?}",map);
         }
-        Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
+        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
             continue;
         }
         Err(e) => {
@@ -48,12 +51,16 @@ fn main(){
     let matches = Command::new("BitSpot")                                                                         .version("v0.0.2 20240408")
         .author("Weixing Sun <weixing.sun@gmail.com>")                                                            .about("BitSpot Robot")
         .arg(arg!(--server).required(false))
-        .arg(arg!(--interval <VALUE>).required(false))
+        .arg(arg!(--ip <VALUE>).required(false))
         .get_matches();
     let server = *matches.get_one::<bool>("server").unwrap();
+    let ip = matches.get_one::<String>("ip");
+    let ip = if ip.is_none() {"".to_owned()} else {ip.unwrap().to_owned()};
     if server{
         recv_new();
-    }else{
-        send_cast("abc");
+    }else if ip.eq("p2p"){
+        send_p2p(&ip,"p2p");
+    }else {
+        send_cast("cast");
     }
 }
