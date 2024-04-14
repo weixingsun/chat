@@ -69,7 +69,7 @@ fn main(){
     let ip = matches.get_one::<String>("ip");
     let ip = if ip.is_none() {"".to_owned()} else {ip.unwrap().to_owned()};
     if server{
-        recv_new(10000);
+        recv_new(60000);
     }else if ip.len()>0{
         send_p2p(&ip,"P");
     }else {
