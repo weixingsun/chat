@@ -74,7 +74,7 @@ fn main(){
     let ip = matches.get_one::<String>("ip");
     let ip = if ip.is_none() {"".to_owned()} else {ip.unwrap().to_owned()};
     let duration = matches.get_one::<String>("duration");
-    let duration = if duration.is_none() {600} else {duration.unwrap().parse().unwrap()};
+    let duration = if duration.is_none() {60} else {duration.unwrap().parse().unwrap()};
     if server{
         recv_new(60000);
     }else if ip.len()>0{
