@@ -16,14 +16,18 @@ fn send_p2p(ip:&str,value:&str){
     socket.connect(ip).expect("could not connect to peer");
     socket.send(value.as_bytes()).unwrap();
 }
-fn send_cast(value:&str){
-    let ip_from="0.0.0.0:12340";
-    println!("broadcast");
-    let socket = UdpSocket::bind(ip_from).expect("could not create socket");
-    socket.set_broadcast(true).expect("set_broadcast call failed");
-    socket.set_read_timeout(Some(std::time::Duration::from_millis(20))).unwrap();
-    socket.connect("255.255.255.255:1234").expect("could not connect to peer");
-    socket.send(value.as_bytes()).unwrap();
+fn send_cast(value:&str,duration:u32){
+    for i in 0..duration{
+        let value=format!("{value} {i}/{duration}");
+        let ip_from="0.0.0.0:12340";
+        println!("broadcast");
+        let socket = UdpSocket::bind(ip_from).expect("could not create socket");
+        socket.set_broadcast(true).expect("set_broadcast call failed");
+        socket.set_read_timeout(Some(std::time::Duration::from_millis(20))).unwrap();
+        socket.connect("192.168.1.255:1234").expect("could not connect to peer");
+        socket.send(value.as_bytes()).unwrap();
+        thread::sleep(time::Duration::from_secs(5));
+    }
 }
 fn recv_new(timeout:i64){
     let socket = UdpSocket::bind("0.0.0.0:1234").unwrap();
@@ -64,18 +68,18 @@ fn main(){
 		.about("Chat box")
         .arg(arg!(--server).required(false))
         .arg(arg!(--ip <VALUE>).required(false))
+        .arg(arg!(--duration <VALUE>).required(false))
         .get_matches();
     let server = *matches.get_one::<bool>("server").unwrap();
     let ip = matches.get_one::<String>("ip");
     let ip = if ip.is_none() {"".to_owned()} else {ip.unwrap().to_owned()};
+    let duration = matches.get_one::<String>("duration");
+    let duration = if duration.is_none() {600} else {duration.unwrap().parse().unwrap()};
     if server{
         recv_new(60000);
     }else if ip.len()>0{
         send_p2p(&ip,"P");
     }else {
-        loop{
-            send_cast("C");
-            thread::sleep(time::Duration::from_secs(5));
-        }
+        send_cast("BC",duration);
     }
 }
